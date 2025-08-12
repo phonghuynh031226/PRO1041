@@ -24,7 +24,7 @@ import javax.swing.JOptionPane;
 public class dangnhapJdialog extends javax.swing.JDialog implements dangnhapController{
 
     
-    private boolean dangNhapThanhCong = false;
+private boolean dangNhapThanhCong = false;
 
     /**
      * Creates new form dangnhapJdialog
@@ -103,6 +103,8 @@ public void login() {
                 new App.Main.ChuTro.Main_ChuTro().setVisible(true);
             } else {
                 // Người dùng / Người thuê
+                            int userId   = user.getMaNguoiDung(); // <-- dùng getter đúng tên
+            String hoTen = user.getHoTen();       // <-- dùng getter đúng tên
                 new App.Main.NguoiDung.MainNguoiDung().setVisible(true);
             }
         } catch (Throwable t) {
@@ -113,7 +115,9 @@ public void login() {
 }
 
 public boolean isDangNhapThanhCong() {
+
     return dangNhapThanhCong;
+
 }
 
 

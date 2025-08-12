@@ -23,7 +23,9 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
-
+// thêm import
+import App.DAO.ThongKeDAO;
+import App.Impl.ThongKeDAOImpl;
 
 //implements MainChuTroController
 /**
@@ -48,6 +50,7 @@ private DefaultTableModel phongModel;
 //        loadDashboard();
     buildPhongTable();
     loadAllPhong();   // <== nạp tất cả phòng, không lọc trạng thái
+        loadDashboard(); // <— thêm dòng này
 
     }
 
@@ -96,193 +99,37 @@ private static String fmtMoney(BigDecimal v) {
     return nf.format(v);
 }
 
+
+
+// trong class Main_ChuTro
+private final ThongKeDAO thongKeDAO = new ThongKeDAOImpl();
+
+private void loadDashboard() {
+    try {
+        // 1) Tổng doanh thu (tất cả thời gian)
+        var doanhThu = thongKeDAO.getTongDoanhThu();
+        lblDoanhSo.setText(fmtMoney(doanhThu));      // bạn đã có fmtMoney(BigDecimal)
+
+        // 2) Số khách (phòng) đang thuê
+        int soKhach = thongKeDAO.getSoKhachDangThue();
+        lblSoKhach.setText(String.valueOf(soKhach));
+
+        // 3) Hợp đồng sắp hết hạn (30 ngày tới)
+        int sapHetHan = thongKeDAO.getSoHopDongSapHetHan(30);
+        lblHopDong.setText(String.valueOf(sapHetHan));
+
+        // 4) Hóa đơn chưa thanh toán
+        int chuaTT = thongKeDAO.getSoHoaDonChuaThanhToan();
+        lblHoaDon.setText(String.valueOf(chuaTT));
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        JOptionPane.showMessageDialog(this, "Lỗi tải dashboard: " + e.getMessage());
+    }
+}
+
     
 
-//    // ===== DAOs =====
-////    private final HoaDonDAO hoaDonDAO = new HoaDonDAOImpl();
-////    private final HopDongDAO hopDongDAO = new HopDongDAOImpl();
-//
-//    // ===== Wiring menu & buttons =====
-//    private void setupActions() {
-//        // mở dialogs
-//        jMenuPhongTro.addMenuListener(new javax.swing.event.MenuListener() {
-//            @Override public void menuSelected(javax.swing.event.MenuEvent e) { openPhong(); }
-//            @Override public void menuDeselected(javax.swing.event.MenuEvent e) {}
-//            @Override public void menuCanceled(javax.swing.event.MenuEvent e) {}
-//        });
-//        jMenuHopDong.addMenuListener(new javax.swing.event.MenuListener() {
-//            @Override public void menuSelected(javax.swing.event.MenuEvent e) { openHopDong(); }
-//            @Override public void menuDeselected(javax.swing.event.MenuEvent e) {}
-//            @Override public void menuCanceled(javax.swing.event.MenuEvent e) {}
-//        });
-//        jMenuHoaDon.addMenuListener(new javax.swing.event.MenuListener() {
-//            @Override public void menuSelected(javax.swing.event.MenuEvent e) { openHoaDon(); }
-//            @Override public void menuDeselected(javax.swing.event.MenuEvent e) {}
-//            @Override public void menuCanceled(javax.swing.event.MenuEvent e) {}
-//        });
-//        jMtaikhoan.addMenuListener(new javax.swing.event.MenuListener() {
-//            @Override public void menuSelected(javax.swing.event.MenuEvent e) { openTaiKhoan(); }
-//            @Override public void menuDeselected(javax.swing.event.MenuEvent e) {}
-//            @Override public void menuCanceled(javax.swing.event.MenuEvent e) {}
-//        });
-//
-//        // nút hệ thống
-//        btnThoat.addActionListener(evt -> {
-//            int c = JOptionPane.showConfirmDialog(this, "Bạn muốn đóng ứng dụng?", "Thoát?", JOptionPane.YES_NO_OPTION);
-//            if (c == JOptionPane.YES_OPTION) System.exit(0);
-//        });
-//        btnDangXuat.addActionListener(evt -> {
-//            // nếu có màn đăng nhập, bạn mở lại tại đây
-//            JOptionPane.showMessageDialog(this, "Đăng xuất (demo).");
-//        });
-//    }
-//
-//    // ===== Dashboard =====
-//    @Override
-//    public void loadDashboard() {
-////        try {
-////            // Doanh thu tháng hiện tại
-////            LocalDate now = LocalDate.now();
-////            LocalDate start = now.withDayOfMonth(1);
-////            LocalDate end   = now.withDayOfMonth(now.lengthOfMonth());
-////            Date from = Date.from(start.atStartOfDay(ZoneId.systemDefault()).toInstant());
-////            Date to   = Date.from(end.atTime(23,59,59).atZone(ZoneId.systemDefault()).toInstant());
-////
-////            long doanhThuThang = hoaDonDAO.sumDoanhThuDaThanhToan(from, to);
-////            lblDoanhSo.setText(formatMoney(doanhThuThang) + " VND");
-////            lblThangDoanhSo.setText(String.format("%02d", now.getMonthValue()));
-////
-////            // Số khách trọ đang thuê = số hợp đồng trạng thái "Đang thuê"
-////            int soDangThue = countDangThue(hopDongDAO.findAll());
-////            lblSoKhach.setText(pad2(soDangThue));
-////
-////            // Hợp đồng sắp hết hạn (7 ngày tới)
-////            int sapHetHan = countSapHetHan(hopDongDAO.findAll(), 7);
-////            lblHopDong.setText(pad2(sapHetHan));
-////
-////            // Hóa đơn chưa thanh toán
-////            int chuaTT = hoaDonDAO.findByTrangThai("Chưa thanh toán").size();
-////            lblHoaDon.setText(pad2(chuaTT));
-////
-////            // Tải bảng: 10 hóa đơn gần nhất
-////            fillRecentInvoices();
-////
-////        } catch (Exception ex) {
-////            Logger.getLogger(Main_ChuTro.class.getName()).log(Level.SEVERE, null, ex);
-////            JOptionPane.showMessageDialog(this, "Lỗi tải dashboard: " + ex.getMessage());
-////        }
-//    }
-//
-//    private void fillRecentInvoices() {
-//        DefaultTableModel m = (DefaultTableModel) tblTrangChu.getModel();
-//        m.setRowCount(0);
-//        List<HoaDon> all = hoaDonDAO.findAll();
-//        // sắp xếp theo ngày tạo mới nhất (nếu null thì về cuối)
-//        all.sort((a,b) -> {
-//            Date da = a.getNgayTaoHoaDon();
-//            Date db = b.getNgayTaoHoaDon();
-//            if (da == null && db == null) return 0;
-//            if (da == null) return 1;
-//            if (db == null) return -1;
-//            return db.compareTo(da);
-//        });
-//        int limit = Math.min(10, all.size());
-//        for (int i = 0; i < limit; i++) {
-//            HoaDon h = all.get(i);
-//            long tong = Math.round(nz(h.getTienPhong()) + nz(h.getTienDien()) + nz(h.getTienNuoc()));
-//            m.addRow(new Object[]{
-//                h.getMaHoaDon(),
-//                h.getMaHopDong(),
-//                h.getNgayTaoHoaDon(),
-//                h.getTrangThai(),
-//                formatMoney(tong)
-//            });
-//        }
-//    }
-//
-//// ===== Helpers ngày =====
-//private static java.time.LocalDate toLocal(java.util.Date d) {
-//    return d.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
-//}
-//
-//// ===== Đếm hợp đồng ĐANG THUÊ (không cần cột trangThai) =====
-//private int countDangThue(java.util.List<main.entity.HopDong> list) {
-//    int c = 0;
-//    java.time.LocalDate today = java.time.LocalDate.now();
-//    for (main.entity.HopDong hd : list) {
-//        java.util.Date bd = hd.getNgayBatDau();
-//        java.util.Date kt = hd.getNgayKetThuc();
-//
-//        if (bd == null) continue; // thiếu ngày bắt đầu thì bỏ qua
-//
-//        java.time.LocalDate start = toLocal(bd);
-//        java.time.LocalDate end   = (kt == null) ? null : toLocal(kt);
-//
-//        boolean started = !today.isBefore(start);                  // today >= start
-//        boolean notEnded = (end == null) || !today.isAfter(end);   // end == null || today <= end
-//        if (started && notEnded) c++;
-//    }
-//    return c;
-//}
-//
-//// ===== Đếm hợp đồng SẮP HẾT HẠN trong N ngày tới =====
-//private int countSapHetHan(java.util.List<main.entity.HopDong> list, int daysAhead) {
-//    int c = 0;
-//    java.time.LocalDate today = java.time.LocalDate.now();
-//    java.time.LocalDate limit = today.plusDays(daysAhead);
-//
-//    for (main.entity.HopDong hd : list) {
-//        java.util.Date kt = hd.getNgayKetThuc();
-//        if (kt == null) continue;                    // không có ngày kết thúc thì bỏ qua
-//        java.time.LocalDate end = toLocal(kt);
-//
-//        // end ∈ [today, limit]
-//        if ((!end.isBefore(today)) && (!end.isAfter(limit))) c++;
-//    }
-//    return c;
-//}
-//
-//
-//    private String formatMoney(long v) {
-//        NumberFormat nf = NumberFormat.getNumberInstance(new Locale("vi","VN"));
-//        nf.setMaximumFractionDigits(0);
-//        return nf.format(v);
-//    }
-//    private double nz(Double d){ return d==null?0d:d; }
-//    private String pad2(int n){ return String.format("%02d", n); }
-//
-//    private void buildTable() {
-//        DefaultTableModel m = new DefaultTableModel(new Object[]{
-//            "Mã HĐơn","Mã HĐồng","Ngày tạo","Trạng thái","Tổng tiền"
-//        }, 0) {
-//            @Override public boolean isCellEditable(int r,int c){ return false; }
-//        };
-//        tblTrangChu.setModel(m);
-//        tblTrangChu.setRowHeight(26);
-//    }
-//
-//    // ===== open dialogs =====
-//    @Override public void openPhong()   { tryOpenDialog(PhongJDialog.class); }
-//    @Override public void openHopDong() { tryOpenDialog(HopDongJDialog.class); }
-//    @Override public void openHoaDon()  { tryOpenDialog(HoaDonJDialog.class); }
-//    @Override public void openTaiKhoan(){ tryOpenDialog(TaiKhoanJDialog.class); }
-//
-//    private void tryOpenDialog(Class<? extends javax.swing.JDialog> clazz) {
-//        try {
-//            java.lang.reflect.Constructor<? extends javax.swing.JDialog> c =
-//                    clazz.getConstructor(java.awt.Frame.class, boolean.class);
-//            javax.swing.JDialog dlg = c.newInstance(this, true);
-//            dlg.setVisible(true);
-//            // sau khi đóng dialog, refresh dashboard
-//            loadDashboard();
-//        } catch (NoSuchMethodException e) {
-//            JOptionPane.showMessageDialog(this, "Dialog " + clazz.getSimpleName() + " thiếu constructor (Frame, boolean).");
-//        } catch (Exception e) {
-//            JOptionPane.showMessageDialog(this, "Không mở được " + clazz.getSimpleName() + ": " + e.getMessage());
-//        }
-//    }
-
- 
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -713,7 +560,8 @@ private static String fmtMoney(BigDecimal v) {
 
     private void jMenuThongTinMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jMenuThongTinMouseClicked
         // TODO add your handling code here:
-                this.showThongTinNguoiDungJDialog(this); 
+String username = (App.Utils.XAuth.user != null) ? App.Utils.XAuth.user.getTenTaiKhoan() : null;
+new App.Main.ThongTinNguoiDungJDialog(this, true, username).setVisible(true);
     }//GEN-LAST:event_jMenuThongTinMouseClicked
 
     private void jMenuLichSuHDMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jMenuLichSuHDMouseClicked

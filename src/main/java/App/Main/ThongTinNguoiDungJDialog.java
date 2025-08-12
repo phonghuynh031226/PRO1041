@@ -28,31 +28,168 @@ public class ThongTinNguoiDungJDialog extends javax.swing.JDialog implements Tho
 //        super(parent, modal);
 //        initComponents();
 //    }
-
-
-    // ==== DAO & STATE ====
+//
+//
+//    // ==== DAO & STATE ====
+//    private final TaiKhoanDAO dao = new TaiKhoanDAOImpl();
+//    private TaiKhoan current;
+//    private final String loggedUsername;  // tên TK đang đăng nhập
+//
+//    // NetBeans hay tạo ctor 2 tham số -> mình chuyển tiếp qua ctor 3 tham số
+//    public ThongTinNguoiDungJDialog(java.awt.Frame parent, boolean modal) {
+//        this(parent, modal, null);
+//    }
+//
+//    // Ctor chính: truyền kèm username để tự load form
+//    public ThongTinNguoiDungJDialog(java.awt.Frame parent, boolean modal, String username) {
+//        super(parent, modal);
+//        this.loggedUsername = username;
+//        initComponents();      // giữ nguyên phần NetBeans sinh
+//        afterInit();
+//    }
+//
+//    // ==== SAU KHI BUILD UI ====
+//    private void afterInit() {
+//        buttonGroup1.add(rdnam);
+//        buttonGroup1.add(rdnu);
+//
+//        txtMaNguoiDung.setEditable(false);
+//        txttentaikhoan.setEditable(false);
+//
+//        lblanh.setToolTipText("Nhấn để chọn ảnh");
+//        lblanh.addMouseListener(new java.awt.event.MouseAdapter() {
+//            @Override public void mouseClicked(java.awt.event.MouseEvent e) { chooseImage(); }
+//        });
+//
+//        if (loggedUsername != null && !loggedUsername.isBlank()) {
+//            loadByUsername(loggedUsername);
+//        }
+//    }
+//
+//    // ================= Controller impl =================
+//    @Override
+//    public void loadByUsername(String username) {
+//        if (username == null || username.isBlank()) {
+//            JOptionPane.showMessageDialog(this, "Không có tên tài khoản đăng nhập.");
+//            return;
+//        }
+//        current = dao.findByTenTaiKhoan(username);
+//        if (current == null) {
+//            JOptionPane.showMessageDialog(this, "Không tìm thấy người dùng: " + username);
+//        } else {
+//            setForm(current);
+//        }
+//    }
+//
+//    @Override
+//    public void setForm(TaiKhoan tk) {
+//        current = tk;
+//        txtMaNguoiDung.setText(tk.getMaNguoiDung()==null ? "" : String.valueOf(tk.getMaNguoiDung()));
+//        txttentaikhoan.setText(nvl(tk.getTenTaiKhoan()));
+//        txtMatKhau.setText(nvl(tk.getMatKhau()));
+//        txtHoTen.setText(nvl(tk.getHoTen()));
+//        txtSoDienThoai.setText(nvl(tk.getDienThoai()));
+//        txtEmail.setText(nvl(tk.getEmail()));
+//        txtDiaChi.setText(nvl(tk.getDiaChi()));
+//        txtcccd.setText(nvl(tk.getCccd()));
+//        dcsngaysinh.setDate(tk.getNgaySinh());
+//        if ("Nữ".equalsIgnoreCase(nvl(tk.getGioiTinh()))) rdnu.setSelected(true); else rdnam.setSelected(true);
+//        setImageToLabel(tk.getHinhAnh());
+//    }
+//
+//    @Override
+//    public TaiKhoan getForm() {
+//        // validate nhanh
+//        if (txtHoTen.getText().trim().isEmpty()) {
+//            JOptionPane.showMessageDialog(this, "Họ tên không được trống");
+//            return null;
+//        }
+//        String phone = txtSoDienThoai.getText().trim();
+//        if (!phone.isEmpty() && !phone.matches("\\d{9,11}")) {
+//            JOptionPane.showMessageDialog(this, "Số điện thoại không hợp lệ");
+//            return null;
+//        }
+//        String email = txtEmail.getText().trim();
+//        if (!email.isEmpty() &&
+//            !Pattern.compile("^[\\w._%+-]+@[\\w.-]+\\.[A-Za-z]{2,}$").matcher(email).matches()) {
+//            JOptionPane.showMessageDialog(this, "Email không hợp lệ");
+//            return null;
+//        }
+//
+//        TaiKhoan tk = (current == null) ? new TaiKhoan() : current;
+//        try {
+//            String idStr = txtMaNguoiDung.getText().trim();
+//            if (!idStr.isEmpty()) tk.setMaNguoiDung(Integer.valueOf(idStr));
+//        } catch (Exception ignore) {}
+//
+//        tk.setTenTaiKhoan(txttentaikhoan.getText().trim());
+//        tk.setMatKhau(new String(txtMatKhau.getPassword()));  // hash thì xử lý ở tầng DAO/service
+//        tk.setHoTen(txtHoTen.getText().trim());
+//        tk.setDienThoai(phone);
+//        tk.setEmail(email);
+//        tk.setDiaChi(txtDiaChi.getText().trim());
+//        tk.setCccd(txtcccd.getText().trim());
+//        tk.setNgaySinh(dcsngaysinh.getDate());
+//        tk.setGioiTinh(rdnu.isSelected() ? "Nữ" : "Nam");
+//        tk.setHinhAnh((String) lblanh.getClientProperty("path"));
+//        return tk;
+//    }
+//
+//    @Override
+//    public void update() {
+//        TaiKhoan tk = getForm();
+//        if (tk == null) return;
+//        try {
+//            dao.update(tk);
+//            JOptionPane.showMessageDialog(this, "Cập nhật thành công");
+//            setForm(dao.findByTenTaiKhoan(tk.getTenTaiKhoan())); // refresh
+//        } catch (Exception ex) {
+//            ex.printStackTrace();
+//            JOptionPane.showMessageDialog(this, "Cập nhật thất bại: " + ex.getMessage());
+//        }
+//    }
+//
+//    // ================= Helpers =================
+//    private String nvl(String s){ return s==null ? "" : s; }
+//
+//    private void chooseImage() {
+//        JFileChooser fc = new JFileChooser();
+//        if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+//            File f = fc.getSelectedFile();
+//            setImageToLabel(f.getAbsolutePath());
+//        }
+//    }
+//    private void setImageToLabel(String path){
+//        if (path == null || path.isBlank()) {
+//            lblanh.setIcon(null);
+//            lblanh.putClientProperty("path", null);
+//            return;
+//        }
+//        ImageIcon icon = new ImageIcon(path);
+//        Image img = icon.getImage().getScaledInstance(lblanh.getWidth(), lblanh.getHeight(), Image.SCALE_SMOOTH);
+//        lblanh.setIcon(new ImageIcon(img));
+//        lblanh.putClientProperty("path", path);
+//    }
     private final TaiKhoanDAO dao = new TaiKhoanDAOImpl();
     private TaiKhoan current;
-    private final String loggedUsername;  // tên TK đang đăng nhập
+    private final String loggedUsername;   // tên tài khoản đang đăng nhập
 
-    // NetBeans hay tạo ctor 2 tham số -> mình chuyển tiếp qua ctor 3 tham số
+    // NetBeans hay tạo ctor 2 tham số -> chuyến tiếp
     public ThongTinNguoiDungJDialog(java.awt.Frame parent, boolean modal) {
         this(parent, modal, null);
     }
 
-    // Ctor chính: truyền kèm username để tự load form
+    // Ctor chính: TRUYỀN username để dialog tự nạp form
     public ThongTinNguoiDungJDialog(java.awt.Frame parent, boolean modal, String username) {
         super(parent, modal);
         this.loggedUsername = username;
-        initComponents();      // giữ nguyên phần NetBeans sinh
+        initComponents();
         afterInit();
     }
 
-    // ==== SAU KHI BUILD UI ====
     private void afterInit() {
         buttonGroup1.add(rdnam);
         buttonGroup1.add(rdnu);
-
         txtMaNguoiDung.setEditable(false);
         txttentaikhoan.setEditable(false);
 
@@ -61,32 +198,42 @@ public class ThongTinNguoiDungJDialog extends javax.swing.JDialog implements Tho
             @Override public void mouseClicked(java.awt.event.MouseEvent e) { chooseImage(); }
         });
 
+        // <-- TỰ NẠP DỮ LIỆU NGAY SAU KHI KHỞI TẠO
         if (loggedUsername != null && !loggedUsername.isBlank()) {
             loadByUsername(loggedUsername);
+        } else {
+            JOptionPane.showMessageDialog(this, "Không xác định được tài khoản đang đăng nhập.");
         }
     }
 
     // ================= Controller impl =================
     @Override
     public void loadByUsername(String username) {
-        if (username == null || username.isBlank()) {
-            JOptionPane.showMessageDialog(this, "Không có tên tài khoản đăng nhập.");
-            return;
-        }
-        current = dao.findByTenTaiKhoan(username);
-        if (current == null) {
-            JOptionPane.showMessageDialog(this, "Không tìm thấy người dùng: " + username);
-        } else {
+        try {
+            current = dao.findByTenTaiKhoan(username);
+            if (current == null) {
+                JOptionPane.showMessageDialog(this, "Không tìm thấy người dùng: " + username);
+                clearForm();
+                return;
+            }
             setForm(current);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Lỗi tải dữ liệu: " + ex.getMessage());
         }
     }
 
     @Override
     public void setForm(TaiKhoan tk) {
+        if (tk == null) {  // <<< NULL-SAFE
+            clearForm();
+            return;
+        }
         current = tk;
-        txtMaNguoiDung.setText(tk.getMaNguoiDung()==null ? "" : String.valueOf(tk.getMaNguoiDung()));
+
+        txtMaNguoiDung.setText(tk.getMaNguoiDung() == null ? "" : String.valueOf(tk.getMaNguoiDung()));
         txttentaikhoan.setText(nvl(tk.getTenTaiKhoan()));
-        txtMatKhau.setText(nvl(tk.getMatKhau()));
+        txtMatKhau.setText(nvl(tk.getMatKhau())); // nếu không muốn show thì để trống
         txtHoTen.setText(nvl(tk.getHoTen()));
         txtSoDienThoai.setText(nvl(tk.getDienThoai()));
         txtEmail.setText(nvl(tk.getEmail()));
@@ -123,7 +270,7 @@ public class ThongTinNguoiDungJDialog extends javax.swing.JDialog implements Tho
         } catch (Exception ignore) {}
 
         tk.setTenTaiKhoan(txttentaikhoan.getText().trim());
-        tk.setMatKhau(new String(txtMatKhau.getPassword()));  // hash thì xử lý ở tầng DAO/service
+        tk.setMatKhau(new String(txtMatKhau.getPassword())); // nếu không cho đổi, set lại current.getMatKhau()
         tk.setHoTen(txtHoTen.getText().trim());
         tk.setDienThoai(phone);
         tk.setEmail(email);
@@ -142,7 +289,9 @@ public class ThongTinNguoiDungJDialog extends javax.swing.JDialog implements Tho
         try {
             dao.update(tk);
             JOptionPane.showMessageDialog(this, "Cập nhật thành công");
-            setForm(dao.findByTenTaiKhoan(tk.getTenTaiKhoan())); // refresh
+            // Refresh lại theo username (tránh lệch dữ liệu)
+            TaiKhoan reloaded = dao.findByTenTaiKhoan(tk.getTenTaiKhoan());
+            setForm(reloaded);
         } catch (Exception ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this, "Cập nhật thất bại: " + ex.getMessage());
@@ -150,6 +299,20 @@ public class ThongTinNguoiDungJDialog extends javax.swing.JDialog implements Tho
     }
 
     // ================= Helpers =================
+    private void clearForm() {
+        txtMaNguoiDung.setText("");
+        txttentaikhoan.setText("");
+        txtMatKhau.setText("");
+        txtHoTen.setText("");
+        txtSoDienThoai.setText("");
+        txtEmail.setText("");
+        txtDiaChi.setText("");
+        txtcccd.setText("");
+        dcsngaysinh.setDate(null);
+        rdnam.setSelected(true);
+        setImageToLabel(null);
+    }
+
     private String nvl(String s){ return s==null ? "" : s; }
 
     private void chooseImage() {
@@ -170,7 +333,6 @@ public class ThongTinNguoiDungJDialog extends javax.swing.JDialog implements Tho
         lblanh.setIcon(new ImageIcon(img));
         lblanh.putClientProperty("path", path);
     }
-
 
     /**
      * This method is called from within the constructor to initialize the form.

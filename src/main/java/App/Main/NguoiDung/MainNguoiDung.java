@@ -4,14 +4,16 @@
  */
 package App.Main.NguoiDung;
 
-import App.DAO.HoaDonDAO;
-import App.DAO.HopDongDAO;
-import App.DAO.PhongDAO;
-import App.Entity.HoaDon;
-import App.Entity.HopDong;
-import App.Entity.Phong;
+// ====== thêm vào đầu class ======
+import App.Utils.XJdbc;
 import java.awt.event.ActionEvent;
-import java.util.List;
+import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.text.NumberFormat;
+import java.util.Locale;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
@@ -20,146 +22,134 @@ import javax.swing.table.DefaultTableModel;
  * @author WINDOWS
  */
 public class MainNguoiDung extends javax.swing.JFrame implements MainNguoiDungController{
+// 
+//        public MainNguoiDung() {
+//                initComponents();
+//
+//            }
+//        
+private static final java.math.BigDecimal DON_GIA_DIEN = new java.math.BigDecimal("3500");
+private static final java.math.BigDecimal DON_GIA_NUOC = new java.math.BigDecimal("10000");
 
-        public MainNguoiDung() {
-                initComponents();
-                afterInit();
-            }
+    
+    // ===== user hiện tại (truyền từ màn đăng nhập) =====
+    private final int currentUserId;
+    private final String currentUserName;
 
-    /* ================== FIELDS ================== */
-    private final PhongDAO phongDAO = new App.Impl.PhongDAOImpl();
-    private final HopDongDAO hopDongDAO = new App.Impl.HopDongDAOImpl();
-    private final HoaDonDAO hoaDonDAO = new App.Impl.HoaDonDAOImpl();
-
+    // ===== model cho bảng =====
     private DefaultTableModel model;
 
-    // Nếu bạn có SessionManager:
-    private Long getCurrentUserId() {
-        try {
-            // return SessionManager.getSession().getUser().getId();
-            // Tạm: giả lập userId = 0 nếu chưa đăng nhập
-            return 0L;
-        } catch (Exception e) {
-            return 0L;
-        }
-    }
+public MainNguoiDung() { this(0, "Họ tên"); }
+public MainNguoiDung(int userId, String hoTen) {
+    this.currentUserId = userId;
+    this.currentUserName = (hoTen != null ? hoTen : "Họ tên");
+    initComponents();
+    afterInit();
+}
 
+    // ===== khởi tạo sau initComponents() =====
     private void afterInit() {
-        // table model
-        model = (DefaultTableModel) tblPhongTrong.getModel();
-        model.setColumnIdentifiers(new Object[]{
-            "ID Phòng", "Tên phòng", "Diện tích (m²)", "Giá phòng", "Địa chỉ", "Mô tả"
-        });
 
-        // bind
-        btnDangKy.addActionListener(this::onDangKy);
-        tblPhongTrong.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) tableRowClick(tblPhongTrong.getSelectedRow());
-        });
+model = (javax.swing.table.DefaultTableModel) tblPhongTrong.getModel();
+model.setColumnIdentifiers(new Object[]{"ID Phòng","Tên phòng","Diện tích (m²)","Giá phòng","Địa chỉ","Mô tả"});
+btnDangKy.addActionListener(e -> dangKyPhong());
+tblPhongTrong.getSelectionModel().addListSelectionListener(e -> {
+    if (!e.getValueIsAdjusting()) tableRowClick(tblPhongTrong.getSelectedRow());
+});
+loadPhongTrong();
+showHeaderInfo();
 
-        // nạp dữ liệu
-        loadPhongTrong();
-        showHeaderInfo();
     }
 
-    private void onDangKy(ActionEvent e) { dangKyPhong(); }
-
-    /* ================== CONTROLLER IMPL ================== */
-
-    @Override
-    public void loadPhongTrong() {
-//        model.setRowCount(0);
-//        // TODO: thay bằng phương thức DAO thực tế của bạn.
-//        // Gợi ý: phongDAO.findPhongTrong() hoặc phongDAO.findByStatus(0) ...
-//        List<Phong> list = phongDAO.findPhongTrong(); // <— đổi nếu khác
-//        for (Phong p : list) {
-//            model.addRow(new Object[]{
-//                p.getId(), p.getTenPhong(), p.getDienTich(), p.getGiaPhong(), p.getDiaChi(), p.getMoTa()
-//            });
-//        }
+    private void onDangKy(ActionEvent e) {
+        dangKyPhong();
     }
 
-    @Override
-    public void showHeaderInfo() {
-//        Long userId = getCurrentUserId();
-//        try {
-//            // Lấy hợp đồng hiện hành của user (nếu có)
-//            // TODO: thay method cho khớp: ví dụ hopDongDAO.findActiveByUserId(userId)
-//            HopDong hd = hopDongDAO.findActiveByUserId(userId); // <— đổi nếu khác
-//            if (hd != null) {
-//                lblIDPhong.setText(String.valueOf(hd.getIdMaPhongTro()));
-//                // TODO: nếu bạn muốn hiển thị tên người thuê, lấy từ user hiện tại
-//                lblTenNguoiThue.setText("Họ tên"); // SessionManager.getSession().getUser().getHoTen()
-//            } else {
-//                lblIDPhong.setText("XX");
-//                lblTenNguoiThue.setText("Họ tên");
-//            }
-//
-//            // Hóa đơn mới nhất (hiển thị tổng cộng)
-//            // TODO: thay bằng phương thức DAO của bạn, ví dụ hoaDonDAO.findLatestByUser(userId)
-//            HoaDon latest = hoaDonDAO.findLatestByUser(userId); // <— đổi nếu khác
-//            if (latest != null) {
-//                // Bạn có thể format tiền nếu muốn
-//                lblTongTien.setText(String.valueOf(latest.getTongCong()));
-//            } else {
-//                lblTongTien.setText("XXXXXXXX");
-//            }
-//        } catch (Exception ex) {
-//            lblIDPhong.setText("XX");
-//            lblTenNguoiThue.setText("Họ tên");
-//            lblTongTien.setText("XXXXXXXX");
-//        }
+    // ===== helper format =====
+    private static String fmtMoney(BigDecimal v) {
+        if (v == null) return "0";
+        NumberFormat nf = NumberFormat.getNumberInstance(new Locale("vi", "VN"));
+        nf.setMaximumFractionDigits(0);
+        return nf.format(v);
     }
 
-    @Override
-    public void tableRowClick(int row) {
-        if (row < 0) return;
-        Object id = model.getValueAt(row, 0);
-        txtIDPhong.setText(String.valueOf(id));
+    private static String fmtArea(BigDecimal v) {
+        if (v == null) return "";
+        NumberFormat nf = NumberFormat.getNumberInstance(new Locale("vi", "VN"));
+        nf.setMaximumFractionDigits(2);
+        nf.setMinimumFractionDigits(0);
+        return nf.format(v);
     }
 
-    @Override
-    public void dangKyPhong() {
-//        String idPhongTxt = txtIDPhong.getText().trim();
-//        if (idPhongTxt.isEmpty()) {
-//            JOptionPane.showMessageDialog(this, "Nhập ID phòng hoặc chọn trong bảng.");
-//            return;
-//        }
-//
-//        Long idPhong;
-//        try {
-//            idPhong = Long.valueOf(idPhongTxt);
-//        } catch (NumberFormatException e) {
-//            JOptionPane.showMessageDialog(this, "ID phòng phải là số.");
-//            return;
-//        }
-//
-//        Long userId = getCurrentUserId();
-//        int ret = JOptionPane.showConfirmDialog(this, "Đăng ký phòng " + idPhong + " ?", "Xác nhận",
-//                JOptionPane.YES_NO_OPTION);
-//        if (ret != JOptionPane.YES_OPTION) return;
-//
-//        try {
-//            // TODO: thay bằng method thực tế, ví dụ phongDAO.dangKyPhong(userId, idPhong)
-//            boolean ok = phongDAO.dangKyPhong(userId, idPhong); // <— đổi nếu khác
-//            if (ok) {
-//                JOptionPane.showMessageDialog(this, "Đăng ký phòng thành công! Vui lòng chờ chủ trọ liên hệ.");
-//                resetMiniForm();
-//                loadPhongTrong();
-//                showHeaderInfo();
-//            } else {
-//                JOptionPane.showMessageDialog(this, "Đăng ký thất bại hoặc phòng đã được đăng ký.");
-//            }
-//        } catch (Exception ex) {
-//            JOptionPane.showMessageDialog(this, "Có lỗi xảy ra khi đăng ký.\n" + ex.getMessage());
-//        }
+@Override
+public void loadPhongTrong() {
+    model.setRowCount(0);
+    var sql = """
+        SELECT maPhong, dienTich, giaTien, diaChi, moTa
+        FROM Phong WHERE trangThai = N'Trống' ORDER BY giaTien ASC
+    """;
+    try (var rs = App.Utils.XJdbc.executeQuery(sql)) {
+        while (rs.next()) {
+            var mp  = rs.getString("maPhong");
+            var dt  = (java.math.BigDecimal) rs.getObject("dienTich");
+            var gia = (java.math.BigDecimal) rs.getObject("giaTien");
+            model.addRow(new Object[]{ mp, "Phòng "+mp, fmtArea(dt), fmtMoney(gia), rs.getString("diaChi"), rs.getString("moTa")});
+        }
+    } catch (Exception ex) {
+        javax.swing.JOptionPane.showMessageDialog(this, "Lỗi tải phòng trống: " + ex.getMessage());
     }
+}
+
+
+@Override
+public void showHeaderInfo() {
+    lblTenNguoiThue.setText(currentUserName);
+    var sqlHD = """
+        SELECT TOP 1 maPhong FROM HopDong
+        WHERE maNguoiDung=? AND CONVERT(date,GETDATE()) BETWEEN CONVERT(date,ngayBatDau) AND CONVERT(date,ngayKetThuc)
+        ORDER BY ngayBatDau DESC
+    """;
+    try (var rs = App.Utils.XJdbc.executeQuery(sqlHD, currentUserId)) {
+        lblIDPhong.setText(rs.next() ? rs.getString("maPhong") : "XX");
+    } catch (Exception ex) { lblIDPhong.setText("XX"); }
+    var now = java.time.LocalDate.now();
+    lblThang.setText(String.format("THÁNG %02d/%d", now.getMonthValue(), now.getYear()));
+}
+
+@Override
+public void tableRowClick(int row) {
+    if (row < 0) return;
+    txtIDPhong.setText(String.valueOf(model.getValueAt(row, 0)));
+}
+
+
+@Override
+public void dangKyPhong() {
+    var maPhong = txtIDPhong.getText().trim();
+    if (maPhong.isEmpty()) { javax.swing.JOptionPane.showMessageDialog(this,"Hãy nhập/chọn ID phòng."); return; }
+
+    java.math.BigDecimal giaPhong = null; String trangThai = null;
+    try (var rs = App.Utils.XJdbc.executeQuery("SELECT giaTien,trangThai FROM Phong WHERE maPhong=?", maPhong)) {
+        if (rs.next()) { giaPhong = (java.math.BigDecimal) rs.getObject("giaTien"); trangThai = rs.getString("trangThai"); }
+    } catch (Exception ex) { javax.swing.JOptionPane.showMessageDialog(this, "Lỗi lấy phòng: "+ex.getMessage()); return; }
+    if (giaPhong == null) { javax.swing.JOptionPane.showMessageDialog(this,"Không tìm thấy phòng "+maPhong); return; }
+    if (!"Trống".equalsIgnoreCase(trangThai)) { javax.swing.JOptionPane.showMessageDialog(this,"Phòng không còn trống."); return; }
+
+    var dlg = new App.Main.NguoiDung.DangKyPhongJDialog(this, true, maPhong, giaPhong,
+            DON_GIA_DIEN, DON_GIA_NUOC, currentUserId, currentUserName);
+    dlg.setLocationRelativeTo(this);
+    dlg.setVisible(true);
+    if (dlg.isAccepted()) { resetMiniForm(); loadPhongTrong(); showHeaderInfo(); }
+}
 
     @Override
     public void resetMiniForm() {
         txtIDPhong.setText("");
         tblPhongTrong.clearSelection();
     }
+
+
+
 
 
     /**
@@ -407,12 +397,22 @@ public class MainNguoiDung extends javax.swing.JFrame implements MainNguoiDungCo
         jMenuHopDong.setIcon(new javax.swing.ImageIcon(getClass().getResource("/TroViet/Icon/rent (1).png"))); // NOI18N
         jMenuHopDong.setText("Hợp đồng");
         jMenuHopDong.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
+        jMenuHopDong.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jMenuHopDongMouseClicked(evt);
+            }
+        });
         jMenuBar1.add(jMenuHopDong);
 
         jMenuHoaDon.setForeground(new java.awt.Color(255, 255, 255));
         jMenuHoaDon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/TroViet/Icon/bill (1).png"))); // NOI18N
         jMenuHoaDon.setText("Hóa đơn");
         jMenuHoaDon.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
+        jMenuHoaDon.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jMenuHoaDonMouseClicked(evt);
+            }
+        });
         jMenuBar1.add(jMenuHoaDon);
 
         jMenuAbout.setForeground(new java.awt.Color(255, 255, 255));
@@ -429,6 +429,11 @@ public class MainNguoiDung extends javax.swing.JFrame implements MainNguoiDungCo
         jMenuThongTin.setIcon(new javax.swing.ImageIcon(getClass().getResource("/TroViet/Icon/user (1).png"))); // NOI18N
         jMenuThongTin.setText("Thông tin cá nhân");
         jMenuThongTin.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuThongTin.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jMenuThongTinMouseClicked(evt);
+            }
+        });
         jMenuNguoiDung.add(jMenuThongTin);
         jMenuNguoiDung.add(jSeparator5);
 
@@ -436,6 +441,11 @@ public class MainNguoiDung extends javax.swing.JFrame implements MainNguoiDungCo
         jMenuLichSuHD.setIcon(new javax.swing.ImageIcon(getClass().getResource("/TroViet/Icon/history.png"))); // NOI18N
         jMenuLichSuHD.setText("Lịch sử hoạt động");
         jMenuLichSuHD.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuLichSuHD.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jMenuLichSuHDMouseClicked(evt);
+            }
+        });
         jMenuNguoiDung.add(jMenuLichSuHD);
 
         jMenuAbout.add(jMenuNguoiDung);
@@ -486,40 +496,60 @@ public class MainNguoiDung extends javax.swing.JFrame implements MainNguoiDungCo
 
     private void btnThoatActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnThoatActionPerformed
         // TODO add your handling code here:
-    int choice = JOptionPane.showConfirmDialog(this, 
-        "Bạn muốn đóng ứng dụng?", 
-        "Thoát", 
-        JOptionPane.YES_NO_OPTION);
-    if (choice == JOptionPane.YES_OPTION) {
-        System.exit(0);
-    }
+        int choice = JOptionPane.showConfirmDialog(this,
+                "Bạn muốn đóng ứng dụng?",
+                "Thoát",
+                JOptionPane.YES_NO_OPTION);
+        if (choice == JOptionPane.YES_OPTION) System.exit(0);
     }//GEN-LAST:event_btnThoatActionPerformed
 
     private void btnDangXuatActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDangXuatActionPerformed
         // TODO add your handling code here:
-    int choice = JOptionPane.showConfirmDialog(this, 
-        "Bạn muốn đăng xuất?", 
-        "Đăng xuất", 
-        JOptionPane.YES_NO_OPTION);
-    if (choice == JOptionPane.YES_OPTION) {
-        // Ví dụ mở lại màn hình đăng nhập
-        this.dispose();
-        // new DangNhapJFrame().setVisible(true);
-    }
+        int choice = JOptionPane.showConfirmDialog(this,
+                "Bạn muốn đăng xuất?",
+                "Đăng xuất",
+                JOptionPane.YES_NO_OPTION);
+        if (choice == JOptionPane.YES_OPTION) {
+            this.dispose();
+            // TODO: mở màn hình đăng nhập
+            // new DangNhapJFrame().setVisible(true);
+        }
     }//GEN-LAST:event_btnDangXuatActionPerformed
 
     private void tblPhongTrongMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblPhongTrongMouseClicked
         // TODO add your handling code here:
-    int row = tblPhongTrong.getSelectedRow();
-    if (row >= 0) {
-        tableRowClick(row); // gọi hàm controller để set txtIDPhong
-    }
+        int row = tblPhongTrong.getSelectedRow();
+        if (row >= 0) tableRowClick(row);
     }//GEN-LAST:event_tblPhongTrongMouseClicked
 
     private void btnDangKyActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDangKyActionPerformed
         // TODO add your handling code here:
-    dangKyPhong(); // gọi hàm controller xử lý đăng ký
+        dangKyPhong();
     }//GEN-LAST:event_btnDangKyActionPerformed
+
+    private void jMenuHopDongMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jMenuHopDongMouseClicked
+        // TODO add your handling code here:
+                        this.showHopDongJDialog(this); 
+    }//GEN-LAST:event_jMenuHopDongMouseClicked
+
+    private void jMenuHoaDonMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jMenuHoaDonMouseClicked
+        // TODO add your handling code here:
+                        this.showHoaDonJDialog(this); 
+    }//GEN-LAST:event_jMenuHoaDonMouseClicked
+
+    private void jMenuThongTinMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jMenuThongTinMouseClicked
+        // TODO add your handling code here:
+//                        this.showThongTinNguoiDungJDialog(this); 
+                        // cần import App.Utils.XAuth;
+String username = (App.Utils.XAuth.user != null) ? App.Utils.XAuth.user.getTenTaiKhoan() : null;
+new App.Main.ThongTinNguoiDungJDialog(this, true, username).setVisible(true);
+
+    }//GEN-LAST:event_jMenuThongTinMouseClicked
+
+    private void jMenuLichSuHDMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jMenuLichSuHDMouseClicked
+        // TODO add your handling code here:
+                        this.showLichSuNguoiDungJDialog(this); 
+    }//GEN-LAST:event_jMenuLichSuHDMouseClicked
 
     /**
      * @param args the command line arguments
