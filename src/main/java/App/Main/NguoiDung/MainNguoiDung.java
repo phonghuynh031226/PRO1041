@@ -535,6 +535,7 @@ public void dangKyPhong() {
     private void jMenuHoaDonMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jMenuHoaDonMouseClicked
         // TODO add your handling code here:
                         this.showHoaDonJDialog(this); 
+//                            new App.Main.NguoiDung.HoaDonJDialog(this, true).setVisible(true);
     }//GEN-LAST:event_jMenuHoaDonMouseClicked
 
     private void jMenuThongTinMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jMenuThongTinMouseClicked

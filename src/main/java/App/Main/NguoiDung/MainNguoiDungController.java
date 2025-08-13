@@ -4,10 +4,8 @@
  */
 package App.Main.NguoiDung;
 
-import App.Main.ChuTro.HoaDonJDialog;
-import App.Main.ChuTro.HopDongJDialog;
-import App.Main.ChuTro.PhongJDialog;
-import App.Main.ChuTro.TaiKhoanJDialog;
+import App.Main.NguoiDung.HoaDonJDialog;
+import App.Main.NguoiDung.HopDongJDialog;
 import App.Main.LichSuNguoiDungJDialog;
 import App.Main.ThongTinNguoiDungJDialog;
 import javax.swing.JDialog;
@@ -44,9 +42,6 @@ public interface MainNguoiDungController {
     }
     default void showHoaDonJDialog(JFrame frame){
         this.showJDialog(new HoaDonJDialog(frame, true));
-    }
-    default void showTaiKhoanJDialog(JFrame frame){
-        this.showJDialog(new TaiKhoanJDialog(frame, true));
     }
     default void showThongTinNguoiDungJDialog(JFrame frame){
         this.showJDialog(new ThongTinNguoiDungJDialog(frame, true));
